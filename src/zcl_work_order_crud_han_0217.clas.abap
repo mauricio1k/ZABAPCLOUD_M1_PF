@@ -26,6 +26,7 @@ ENDCLASS.
 
 
 CLASS zcl_work_order_crud_han_0217 IMPLEMENTATION.
+
   METHOD create_work_order.
 
 * Validation for creation

@@ -24,8 +24,6 @@ CLASS zcl_work_order_validator_0217 DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS: c_valid_status   TYPE string VALUE 'PE CO', " Example statuses: Pending, Completed
-               c_valid_priority TYPE string VALUE 'A B'. " Example priorities: High, Low
 
     METHODS check_customer_exists
       IMPORTING
@@ -37,7 +35,13 @@ CLASS zcl_work_order_validator_0217 DEFINITION
       IMPORTING
         iv_technician_id TYPE zde_technician_id_0217
       RETURNING
-        VALUE(r_result)  TYPE abap_bool. " Example priorities: High, Low
+        VALUE(r_result)  TYPE abap_bool.
+
+    METHODS check_priority_valid
+      IMPORTING
+        iv_priority     TYPE zde_order_priority_0217
+      RETURNING
+        VALUE(r_result) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -60,7 +64,8 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     ENDIF.
 
 *    " Check if priority is valid
-    IF iv_priority NE c_valid_priority.
+    DATA(lv_priority_valid) = check_priority_valid( iv_priority ).
+    IF lv_priority_valid IS INITIAL.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -103,6 +108,18 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
 
     r_result = COND abap_bool( WHEN sy-subrc EQ 0 THEN abap_true ELSE abap_false ).
 
+
+  ENDMETHOD.
+
+
+  METHOD check_priority_valid.
+
+    SELECT SINGLE FROM ztpriority_0217
+    FIELDS priority_code
+    WHERE priority_code EQ @iv_priority
+    INTO @DATA(lv_priority_valid).
+
+    r_result = COND abap_bool( WHEN sy-subrc EQ 0 THEN abap_true ELSE abap_false ).
 
   ENDMETHOD.
 
