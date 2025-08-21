@@ -6,7 +6,9 @@ CLASS zcl_work_order_crud_han_0217 DEFINITION
   PUBLIC SECTION.
 
     DATA: ls_work_order TYPE ztworkorder_0217,
+          ls_order_log  TYPE ztorderhist_0217,
           mo_validate   TYPE REF TO zcl_work_order_validator_0217.
+
 
     METHODS create_Work_order IMPORTING iv_work_order_id  TYPE zde_order_id_0217
                                         iv_customer_id    TYPE zde_customer_id_0217
@@ -19,6 +21,13 @@ CLASS zcl_work_order_crud_han_0217 DEFINITION
                               EXPORTING ev_order_validate TYPE abap_bool
                               RETURNING VALUE(rv_result)  TYPE abap_bool.
 
+*    METHODS update_work_order IMPORTING iv_work_order_id TYPE zde_order_id_0217
+*                                        iv_status        TYPE zde_order_status_0217
+    METHODS update_work_order IMPORTING is_work_order    TYPE ztworkorder_0217
+
+                              RETURNING VALUE(rv_result) TYPE abap_bool.
+
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -29,7 +38,7 @@ CLASS zcl_work_order_crud_han_0217 IMPLEMENTATION.
 
   METHOD create_work_order.
 
-* Validation for creation
+* Validation and creation work order
 
     CREATE OBJECT mo_validate.
 
@@ -57,6 +66,52 @@ CLASS zcl_work_order_crud_han_0217 IMPLEMENTATION.
       rv_result = abap_false.
     ENDIF.
 
+
+  ENDMETHOD.
+
+
+  METHOD update_work_order.
+
+*   Validate and update order.
+    CREATE OBJECT mo_validate.
+
+    DATA(lv_validate_uporder) = mo_validate->validate_update_order( iv_work_order_id    = is_work_order-work_order_id
+                                                                    iv_status           = is_work_order-status  ).
+
+    IF lv_validate_uporder EQ abap_false.
+      rv_result = abap_false.
+      RETURN.
+    ENDIF.
+
+    DATA(lv_order_validate) = mo_validate->validate_create_order(   iv_customer_id      = is_work_order-customer_id
+                                                                    iv_technician_id    = is_work_order-technician_id
+                                                                    iv_priority         = is_work_order-priority ).
+    IF lv_order_validate EQ abap_false.
+      rv_result = abap_false.
+      RETURN.
+    ENDIF.
+
+    UPDATE ztworkorder_0217 FROM @is_work_order.
+
+    SELECT COUNT( * )
+    FROM ztorderhist_0217
+    WHERE work_order_id EQ @is_work_order-work_order_id
+    INTO @DATA(lv_records).
+
+    ls_order_log = VALUE ztorderhist_0217(  history_id          = is_work_order-work_order_id && lv_records
+                                            work_order_id       = is_work_order-work_order_id
+                                            modification_date   = cl_abap_context_info=>get_system_date( )
+                                            change_description  = ' New technician' ).
+
+    INSERT ztorderhist_0217 FROM @ls_order_log.
+
+
+
+    IF sy-subrc EQ 0.
+      rv_result = abap_true.
+    ELSE.
+      rv_result = abap_false.
+    ENDIF.
 
   ENDMETHOD.
 

@@ -43,6 +43,12 @@ CLASS zcl_work_order_validator_0217 DEFINITION
       RETURNING
         VALUE(r_result) TYPE abap_bool.
 
+    METHODS check_order_exists
+      IMPORTING
+        iv_work_order_id TYPE zde_order_id_0217
+      RETURNING
+        VALUE(r_result)  TYPE abap_bool.
+
 ENDCLASS.
 
 CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
@@ -74,6 +80,25 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD validate_update_order.
+
+    " Check if the work order exists
+    DATA(lv_order_exists) = check_order_exists( iv_work_order_id ).
+    IF lv_order_exists IS INITIAL.
+      rv_valid = abap_false.
+      RETURN.
+    ENDIF.
+
+    " Check if the order status is editable (e.g., Pending)
+    IF iv_status NE 'PE'.
+      rv_valid = abap_false.
+      RETURN.
+    ENDIF.
+
+    rv_valid = abap_true.
+
+  ENDMETHOD.
+
   METHOD validate_delete_order.
 
   ENDMETHOD.
@@ -82,9 +107,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD validate_update_order.
 
-  ENDMETHOD.
 
 
   METHOD check_customer_exists.
@@ -118,6 +141,18 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     FIELDS priority_code
     WHERE priority_code EQ @iv_priority
     INTO @DATA(lv_priority_valid).
+
+    r_result = COND abap_bool( WHEN sy-subrc EQ 0 THEN abap_true ELSE abap_false ).
+
+  ENDMETHOD.
+
+
+  METHOD check_order_exists.
+
+    SELECT SINGLE FROM ztworkorder_0217
+    FIELDS work_order_id
+    WHERE work_order_id EQ @iv_work_order_id
+    INTO @DATA(lv_order_exist).
 
     r_result = COND abap_bool( WHEN sy-subrc EQ 0 THEN abap_true ELSE abap_false ).
 

@@ -15,9 +15,17 @@ CLASS zcl_table_crud_0217 IMPLEMENTATION.
 
   METHOD if_oo_adt_classrun~main.
 
-    DATA(ls_worder) = VALUE ztworkorder_0217( work_order_id = '0000000002' ).
+*    DATA(ls_worder) = VALUE ztworkorder_0217( work_order_id = '0000000002' ).
+*
+*    DELETE ztworkorder_0217 FROM @ls_worder.
 
-    DELETE ztworkorder_0217 FROM @ls_worder.
+
+    SELECT COUNT( * )
+    FROM ztworkorder_0217
+    WHERE work_order_id EQ '0000000002'
+    INTO @DATA(lv_records).
+
+    out->write( lv_records ).
 
   ENDMETHOD.
 
