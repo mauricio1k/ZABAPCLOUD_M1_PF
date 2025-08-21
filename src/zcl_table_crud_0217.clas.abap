@@ -5,6 +5,10 @@ CLASS zcl_table_crud_0217 DEFINITION
 
   PUBLIC SECTION.
     INTERFACES if_oo_adt_classrun.
+
+     DATA: lt_technician TYPE STANDARD TABLE OF zttechnician0217.
+
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -20,12 +24,19 @@ CLASS zcl_table_crud_0217 IMPLEMENTATION.
 *    DELETE ztworkorder_0217 FROM @ls_worder.
 
 
-    SELECT COUNT( * )
-    FROM ztworkorder_0217
-    WHERE work_order_id EQ '0000000002'
-    INTO @DATA(lv_records).
+*    SELECT COUNT( * )
+*    FROM ztworkorder_0217
+*    WHERE work_order_id EQ '0000000002'
+*    INTO @DATA(lv_records).
+*
+*    out->write( lv_records ).
 
-    out->write( lv_records ).
+     lt_technician = VALUE #( ( technician_id  = '00000003'
+                               name           = 'Oscar Jurado'
+                               specialty      = 'Software Engineer'   ) ).
+
+     INSERT zttechnician0217 FROM TABLE @lt_technician.
+
 
   ENDMETHOD.
 

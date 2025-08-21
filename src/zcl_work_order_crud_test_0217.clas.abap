@@ -7,14 +7,11 @@ CLASS zcl_work_order_crud_test_0217 DEFINITION
 
     INTERFACES if_oo_adt_classrun.
 
-    DATA: mo_order_crud    TYPE REF TO zcl_work_order_crud_han_0217,
-          ls_work_order    TYPE ztworkorder_0217,
-          lv_order_id      TYPE zde_order_id_0217,
-          lv_technician_id TYPE zde_technician_id_0217,
-          lv_priority      TYPE zde_order_priority_0217,
-          lv_status        TYPE zde_order_status_0217,
-          lv_description   TYPE zde_order_description_0217.
-
+    DATA: mo_order_crud   TYPE REF TO zcl_work_order_crud_han_0217,
+          ls_work_order   TYPE ztworkorder_0217,
+          ls_update_order TYPE ztworkorder_0217,
+          lv_order_id     TYPE zde_order_id_0217,
+          lv_order_status TYPE zde_order_status_0217.
 
     DATA: lt_technician TYPE STANDARD TABLE OF zttechnician0217,
           lt_customer   TYPE STANDARD TABLE OF ztcustomer_0217,
@@ -53,7 +50,7 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
     CREATE OBJECT mo_order_crud.
 
-    DATA(lv_result) = mo_order_crud->create_work_order( iv_work_order_id   = ls_work_order-work_order_id
+    DATA(lv_result) = mo_order_crud->create_work_order( iv_work_order_id       = ls_work_order-work_order_id
                                                         iv_customer_id         = ls_work_order-customer_id
                                                         iv_technician_id       = ls_work_order-technician_id
                                                         iv_priority            = ls_work_order-priority
@@ -72,6 +69,7 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
   METHOD test_update_work_order.
 
 * work order to be updated
+
     lv_order_id = '0000000002'.
 
     SELECT SINGLE
@@ -81,42 +79,26 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
     INTO @ls_work_order.
 
 * New data
-    lv_technician_id = '00000002'.
-    lv_priority      = ''.
-    lv_status        = ''.
-    lv_description   = ''.
+    ls_update_order-technician_id = ''.
+    ls_update_order-priority = 'B'.
+    ls_update_order-description = ''.
 
-    IF lv_technician_id NE ''.
-      ls_work_order-technician_id = lv_technician_id.
-    ENDIF.
-
-    IF lv_priority NE ''.
-      ls_work_order-priority = lv_priority.
-    ENDIF.
-
-    IF lv_status NE ''.
-      ls_work_order-status = lv_status.
-    ENDIF.
-
-    IF lv_description NE ''.
-      ls_work_order-description = lv_description.
-    ENDIF.
 
     CREATE OBJECT mo_order_crud.
 
-    DATA(lv_result) = mo_order_crud->update_work_order( ls_work_order ).
+    DATA(lv_result) = mo_order_crud->update_work_order( is_work_order   = ls_work_order
+                                                        is_update_order = ls_update_order ).
 
     IF lv_result = abap_true.
-      io_out->write( |Work order number: { lv_order_id } has been updated| ).
+      io_out->write( |Work order number: { ls_work_order-work_order_id } has been updated| ).
     ELSE.
       io_out->write( 'work order has NOT been updated' ).
     ENDIF.
 
   ENDMETHOD.
 
-
-
   METHOD update_other_tables.
+
 * Method for inserting data into auxiliary tables
 
     lt_technician = VALUE #( ( technician_id  = '00000001'
