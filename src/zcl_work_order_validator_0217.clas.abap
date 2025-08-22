@@ -5,22 +5,22 @@ CLASS zcl_work_order_validator_0217 DEFINITION
 
   PUBLIC SECTION.
     METHODS:
-      validate_create_order IMPORTING iv_customer_id   TYPE zde_customer_id_0217
-                                      iv_technician_id TYPE zde_technician_id_0217
-                                      iv_priority      TYPE zde_order_priority_0217
-                            RETURNING VALUE(rv_valid)  TYPE abap_bool,
+      validate_create_order         IMPORTING iv_customer_id   TYPE zde_customer_id_0217
+                                              iv_technician_id TYPE zde_technician_id_0217
+                                              iv_priority      TYPE zde_order_priority_0217
+                                    RETURNING VALUE(rv_valid)  TYPE abap_bool,
 
-      validate_update_order IMPORTING iv_work_order_id TYPE zde_order_id_0217
-                                      iv_status        TYPE zde_order_status_0217
-                            RETURNING VALUE(rv_valid)  TYPE abap_bool,
+      validate_update_order         IMPORTING iv_work_order_id TYPE zde_order_id_0217
+                                              iv_status        TYPE zde_order_status_0217
+                                    RETURNING VALUE(rv_valid)  TYPE abap_bool,
 
-      validate_delete_order IMPORTING iv_work_order_id TYPE zde_order_id_0217
-                                      iv_status        TYPE zde_order_status_0217
-                            RETURNING VALUE(rv_valid)  TYPE abap_bool,
+      validate_delete_order         IMPORTING iv_work_order_id TYPE zde_order_id_0217
+                                              iv_status        TYPE zde_order_status_0217
+                                    RETURNING VALUE(rv_valid)  TYPE abap_bool,
 
-      validate_status_and_priority IMPORTING iv_status       TYPE zde_order_status_0217
-                                             iv_priority     TYPE zde_order_priority_0217
-                                   RETURNING VALUE(rv_valid) TYPE abap_bool.
+      validate_status_and_priority  IMPORTING iv_status       TYPE zde_order_status_0217
+                                              iv_priority     TYPE zde_order_priority_0217
+                                    RETURNING VALUE(rv_valid) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -54,6 +54,12 @@ CLASS zcl_work_order_validator_0217 DEFINITION
         iv_work_order_id TYPE zde_order_id_0217
       RETURNING
         VALUE(r_result)  TYPE abap_bool.
+
+    METHODS check_status_valid
+      IMPORTING
+        iv_status       TYPE zde_order_status_0217
+      RETURNING
+        VALUE(r_result) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -131,7 +137,25 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+
   METHOD validate_status_and_priority.
+
+    " Validate the status value
+    DATA(lv_status_valid) = check_status_valid( iv_status ).
+    IF lv_status_valid IS INITIAL.
+      rv_valid = abap_false.
+      RETURN.
+    ENDIF.
+
+    " Validate the priority value
+    DATA(lv_priority_valid) = check_priority_valid( iv_priority ).
+    IF lv_priority_valid IS INITIAL.
+      rv_valid = abap_false.
+      RETURN.
+    ENDIF.
+
+    rv_valid = abap_true.
 
   ENDMETHOD.
 
@@ -171,6 +195,18 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     FIELDS priority_code
     WHERE priority_code EQ @iv_priority
     INTO @DATA(lv_priority_valid).
+
+    r_result = COND abap_bool( WHEN sy-subrc EQ 0 THEN abap_true ELSE abap_false ).
+
+  ENDMETHOD.
+
+  METHOD check_status_valid.
+
+    SELECT SINGLE
+      FROM ztstatus_0217
+      FIELDS status_code
+      WHERE status_code EQ @iv_status
+      INTO @DATA(lv_status_valid).
 
     r_result = COND abap_bool( WHEN sy-subrc EQ 0 THEN abap_true ELSE abap_false ).
 

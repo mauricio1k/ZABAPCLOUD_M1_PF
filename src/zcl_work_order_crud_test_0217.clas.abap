@@ -21,7 +21,9 @@ CLASS zcl_work_order_crud_test_0217 DEFINITION
     METHODS:
       update_other_tables,
       test_create_work_order IMPORTING io_out TYPE REF TO if_oo_adt_classrun_out,
-      test_update_work_order IMPORTING io_out TYPE REF TO if_oo_adt_classrun_out.
+      test_update_work_order IMPORTING io_out TYPE REF TO if_oo_adt_classrun_out,
+      test_delete_work_order IMPORTING io_out TYPE REF TO if_oo_adt_classrun_out,
+      test_read_work_order   IMPORTING io_out TYPE REF TO if_oo_adt_classrun_out.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -32,7 +34,9 @@ ENDCLASS.
 CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
   METHOD if_oo_adt_classrun~main.
 *    test_create_work_order( out ).
-    test_update_work_order( out ).
+*    test_update_work_order( out ).
+*    test_delete_work_order( out ).
+    test_read_work_order( out ).
 *    update_other_tables(  ).
 
   ENDMETHOD.
@@ -41,8 +45,8 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
     ls_work_order  = VALUE  ztworkorder_0217(
                             work_order_id  = '0000000002'
-                            customer_id    = '10000003'
-                            technician_id  = '00000004'
+                            customer_id    = '10000005'
+                            technician_id  = '00000003'
                             creation_date  = cl_abap_context_info=>get_system_date( )
                             status         = 'PE'
                             priority       = 'A'
@@ -50,13 +54,7 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
     CREATE OBJECT mo_order_crud.
 
-    DATA(lv_result) = mo_order_crud->create_work_order( iv_work_order_id       = ls_work_order-work_order_id
-                                                        iv_customer_id         = ls_work_order-customer_id
-                                                        iv_technician_id       = ls_work_order-technician_id
-                                                        iv_priority            = ls_work_order-priority
-                                                        iv_status              = ls_work_order-status
-                                                        iv_description         = ls_work_order-description
-                                                        iv_creation_date       = ls_work_order-creation_date ).
+    DATA(lv_result) = mo_order_crud->create_work_order( is_work_order = ls_work_order ).
 
     IF lv_result = abap_true.
       io_out->write( |The work order was created | ).
@@ -75,7 +73,7 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
     SELECT SINGLE
     FROM ztworkorder_0217
     FIELDS *
-    WHERE work_order_id = @lv_order_id
+    WHERE work_order_id EQ @lv_order_id
     INTO @ls_work_order.
 
 * New data
@@ -96,6 +94,54 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD test_delete_work_order.
+
+* Method to delete a work order
+
+    lv_order_id = '0000000002'. " ID of the work order to delete
+
+    SELECT SINGLE
+    FROM ztworkorder_0217
+    FIELDS status
+    WHERE work_order_id = @lv_order_id
+    INTO @lv_order_status.
+
+    CREATE OBJECT mo_order_crud.
+
+    DATA(lv_result) = mo_order_crud->delete_work_order( iv_work_order_id    = lv_order_id
+                                                        iv_status           = lv_order_status ).
+
+    IF lv_result = abap_true.
+      io_out->write( |Work order number: { lv_order_id } has been deleted| ).
+    ELSE.
+      io_out->write( 'work order has NOT been deleted' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD test_read_work_order.
+
+*Method to read a work order
+
+    lv_order_id = '0000000003'. " ID of the work order to read
+
+    SELECT SINGLE
+    FROM ztworkorder_0217
+    FIELDS *
+    WHERE work_order_id EQ @lv_order_id
+    INTO @ls_work_order.
+
+    IF sy-subrc EQ 0.
+      io_out->write( |Details of work order: { lv_order_id } | ).
+      io_out->write( ls_work_order ).
+    ELSE.
+      io_out->write( |Work order: { lv_order_id } does not exist| ).
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD update_other_tables.
 
@@ -175,6 +221,9 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
 
   ENDMETHOD.
+
+
+
 
 
 
