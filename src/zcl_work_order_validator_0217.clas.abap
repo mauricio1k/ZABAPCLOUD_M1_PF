@@ -117,7 +117,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if the work order exists
     DATA(lv_order_exists) = check_order_exists( iv_work_order_id ).
     IF lv_order_exists IS INITIAL.
-      rv_message = |the work order { iv_work_order_id } doest not exist|.
+      rv_message = |the work order doest not exist|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -138,7 +138,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if the order exists
     DATA(lv_order_exists) = check_order_exists( iv_work_order_id ).
     IF lv_order_exists IS INITIAL.
-      rv_message = |the work order { iv_work_order_id } doest not exist|.
+      rv_message = |the work order doest not exist|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -152,7 +152,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
 
     " Check if the order has a history (i.e., if it has been modified before)
     DATA(lv_has_history) = check_order_history( iv_work_order_id ).
-    IF lv_has_history IS NOT INITIAL.
+    IF lv_has_history IS INITIAL.
       rv_message = |the work order { iv_work_order_id } has records in history, cannot be deleted|.
       rv_valid = abap_false.
       RETURN.

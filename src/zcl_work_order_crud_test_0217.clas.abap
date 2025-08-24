@@ -41,10 +41,10 @@ ENDCLASS.
 
 CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
   METHOD if_oo_adt_classrun~main.
-    test_create_work_order( out ).
+*    test_create_work_order( out ).
 *    test_update_work_order( out ).
 *    test_delete_work_order( out ).
-*    test_read_work_order( out ).
+    test_read_work_order( out ).
 *    update_other_tables(  ).
 
   ENDMETHOD.
@@ -52,9 +52,9 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
   METHOD test_create_work_order.
 
     ls_work_order  = VALUE  ztworkorder_0217(
-                            work_order_id  = '0000000007'
-                            customer_id    = '10000002'
-                            technician_id  = '00000001'
+                            work_order_id  = '0000000002'
+                            customer_id    = '10000005'
+                            technician_id  = '00000003'
                             creation_date  = cl_abap_context_info=>get_system_date( )
                             status         = 'PE'
                             priority       = 'A'
@@ -78,7 +78,7 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
 * work order to be updated
 
-    lv_order_id = '0000000002'.
+    lv_order_id = '0000000004'.
 
     SELECT SINGLE
     FROM ztworkorder_0217
@@ -87,8 +87,8 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
     INTO @ls_work_order.
 
 * New data
-    ls_update_order-technician_id = ''.
-    ls_update_order-priority = 'B'.
+    ls_update_order-technician_id = '00000001'.
+    ls_update_order-priority = ''.
     ls_update_order-description = ''.
 
 
@@ -111,7 +111,7 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
 * Method to delete a work order
 
-    lv_order_id = '0000000002'. " ID of the work order to delete
+    lv_order_id = '0000000004'. " ID of the work order to delete
 
     SELECT SINGLE
     FROM ztworkorder_0217
@@ -140,10 +140,10 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 *Method to read a work order
 
     lv_initialdate = '20250820'.
-    lv_enddate  = '20250820'.
-    lv_customer = ''. "'10000005'.
-    lv_status   = 'PE'.
-    lv_priority = 'A'.
+    lv_enddate  = '20250823'.
+    lv_customer = '10000005'.
+    lv_status   = ''. "'PE'.
+    lv_priority = ''. "'A'.
 
     CREATE OBJECT mo_order_crud.
 

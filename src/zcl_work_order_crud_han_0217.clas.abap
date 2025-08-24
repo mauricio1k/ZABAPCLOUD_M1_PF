@@ -303,6 +303,7 @@ CLASS zcl_work_order_crud_han_0217 IMPLEMENTATION.
         FROM ztworkorder_0217
         FIELDS *
         WHERE creation_date GE @lv_initialdate
+            AND creation_date LE @lv_enddate
             AND customer_id EQ ANY ( SELECT FROM ztworkorder_0217
                                FIELDS customer_id
                                WHERE customer_id LIKE @lv_customer )
