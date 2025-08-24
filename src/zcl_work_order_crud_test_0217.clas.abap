@@ -11,9 +11,16 @@ CLASS zcl_work_order_crud_test_0217 DEFINITION
           ls_work_order   TYPE ztworkorder_0217,
           ls_update_order TYPE ztworkorder_0217,
           lv_order_id     TYPE zde_order_id_0217,
-          lv_order_status TYPE zde_order_status_0217.
+          lv_order_status TYPE zde_order_status_0217,
+          lv_message      TYPE string,
+          lv_initialdate  TYPE zde_date_0217,
+          lv_enddate      TYPE zde_date_0217,
+          lv_customer     TYPE zde_customer_id_0217,
+          lv_status       TYPE zde_order_status_0217,
+          lv_priority     TYPE zde_order_priority_0217.
 
-    DATA: lt_technician TYPE STANDARD TABLE OF zttechnician0217,
+    DATA: lt_workorder  TYPE STANDARD TABLE OF ztworkorder_0217,
+          lt_technician TYPE STANDARD TABLE OF zttechnician0217,
           lt_customer   TYPE STANDARD TABLE OF ztcustomer_0217,
           lt_priority   TYPE STANDARD TABLE OF ztpriority_0217,
           lt_status     TYPE STANDARD TABLE OF ztstatus_0217.
@@ -25,6 +32,7 @@ CLASS zcl_work_order_crud_test_0217 DEFINITION
       test_delete_work_order IMPORTING io_out TYPE REF TO if_oo_adt_classrun_out,
       test_read_work_order   IMPORTING io_out TYPE REF TO if_oo_adt_classrun_out.
 
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -33,10 +41,10 @@ ENDCLASS.
 
 CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
   METHOD if_oo_adt_classrun~main.
-*    test_create_work_order( out ).
+    test_create_work_order( out ).
 *    test_update_work_order( out ).
 *    test_delete_work_order( out ).
-    test_read_work_order( out ).
+*    test_read_work_order( out ).
 *    update_other_tables(  ).
 
   ENDMETHOD.
@@ -44,9 +52,9 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
   METHOD test_create_work_order.
 
     ls_work_order  = VALUE  ztworkorder_0217(
-                            work_order_id  = '0000000002'
-                            customer_id    = '10000005'
-                            technician_id  = '00000003'
+                            work_order_id  = '0000000007'
+                            customer_id    = '10000002'
+                            technician_id  = '00000001'
                             creation_date  = cl_abap_context_info=>get_system_date( )
                             status         = 'PE'
                             priority       = 'A'
@@ -54,11 +62,13 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
     CREATE OBJECT mo_order_crud.
 
-    DATA(lv_result) = mo_order_crud->create_work_order( is_work_order = ls_work_order ).
+    DATA(lv_result) = mo_order_crud->create_work_order( EXPORTING is_work_order = ls_work_order
+                                                        IMPORTING rv_message    = lv_message ).
 
     IF lv_result = abap_true.
       io_out->write( |The work order was created | ).
     ELSE.
+      io_out->write( lv_message ).
       io_out->write( |Work order has not been created | ).
     ENDIF.
 
@@ -84,12 +94,14 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
     CREATE OBJECT mo_order_crud.
 
-    DATA(lv_result) = mo_order_crud->update_work_order( is_work_order   = ls_work_order
-                                                        is_update_order = ls_update_order ).
+    DATA(lv_result) = mo_order_crud->update_work_order( EXPORTING   is_work_order   = ls_work_order
+                                                                    is_update_order = ls_update_order
+                                                        IMPORTING   rv_message      = lv_message ).
 
     IF lv_result = abap_true.
       io_out->write( |Work order number: { ls_work_order-work_order_id } has been updated| ).
     ELSE.
+      io_out->write( lv_message ).
       io_out->write( 'work order has NOT been updated' ).
     ENDIF.
 
@@ -109,12 +121,14 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
     CREATE OBJECT mo_order_crud.
 
-    DATA(lv_result) = mo_order_crud->delete_work_order( iv_work_order_id    = lv_order_id
-                                                        iv_status           = lv_order_status ).
+    DATA(lv_result) = mo_order_crud->delete_work_order( EXPORTING   iv_work_order_id    = lv_order_id
+                                                                    iv_status           = lv_order_status
+                                                        IMPORTING   rv_message          = lv_message ).
 
     IF lv_result = abap_true.
       io_out->write( |Work order number: { lv_order_id } has been deleted| ).
     ELSE.
+      io_out->write( lv_message ).
       io_out->write( 'work order has NOT been deleted' ).
     ENDIF.
 
@@ -125,19 +139,25 @@ CLASS zcl_work_order_crud_test_0217 IMPLEMENTATION.
 
 *Method to read a work order
 
-    lv_order_id = '0000000003'. " ID of the work order to read
+    lv_initialdate = '20250820'.
+    lv_enddate  = '20250820'.
+    lv_customer = ''. "'10000005'.
+    lv_status   = 'PE'.
+    lv_priority = 'A'.
 
-    SELECT SINGLE
-    FROM ztworkorder_0217
-    FIELDS *
-    WHERE work_order_id EQ @lv_order_id
-    INTO @ls_work_order.
+    CREATE OBJECT mo_order_crud.
 
-    IF sy-subrc EQ 0.
-      io_out->write( |Details of work order: { lv_order_id } | ).
-      io_out->write( ls_work_order ).
+    DATA(lv_result) = mo_order_crud->read_work_order( EXPORTING iv_initialdate = lv_initialdate
+                                                                iv_enddate     = lv_enddate
+                                                                iv_customer    = lv_customer
+                                                                iv_status      = lv_status
+                                                                iv_priority    = lv_priority
+                                                      IMPORTING rt_workorder = lt_workorder
+                                                                rv_message   = lv_message ).
+    IF lv_result = abap_true.
+      io_out->write( lt_workorder ).
     ELSE.
-      io_out->write( |Work order: { lv_order_id } does not exist| ).
+      io_out->write( lv_message ).
     ENDIF.
 
   ENDMETHOD.

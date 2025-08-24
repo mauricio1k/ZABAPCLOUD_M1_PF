@@ -8,19 +8,28 @@ CLASS zcl_work_order_validator_0217 DEFINITION
       validate_create_order         IMPORTING iv_customer_id   TYPE zde_customer_id_0217
                                               iv_technician_id TYPE zde_technician_id_0217
                                               iv_priority      TYPE zde_order_priority_0217
+                                              iv_status        TYPE zde_order_status_0217
+                                    EXPORTING rv_message       TYPE string
                                     RETURNING VALUE(rv_valid)  TYPE abap_bool,
 
       validate_update_order         IMPORTING iv_work_order_id TYPE zde_order_id_0217
                                               iv_status        TYPE zde_order_status_0217
+                                    EXPORTING rv_message       TYPE string
                                     RETURNING VALUE(rv_valid)  TYPE abap_bool,
 
       validate_delete_order         IMPORTING iv_work_order_id TYPE zde_order_id_0217
                                               iv_status        TYPE zde_order_status_0217
+                                    EXPORTING rv_message       TYPE string
                                     RETURNING VALUE(rv_valid)  TYPE abap_bool,
 
       validate_status_and_priority  IMPORTING iv_status       TYPE zde_order_status_0217
                                               iv_priority     TYPE zde_order_priority_0217
-                                    RETURNING VALUE(rv_valid) TYPE abap_bool.
+                                    EXPORTING rv_message      TYPE string
+                                    RETURNING VALUE(rv_valid) TYPE abap_bool,
+
+      autority_check                  IMPORTING iv_activity      TYPE c
+                                      EXPORTING rv_message       TYPE string
+                                      RETURNING VALUE(rv_result) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -70,6 +79,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if customer exists
     DATA(lv_customer_exists) = check_customer_exists( iv_customer_id ).
     IF lv_customer_exists IS INITIAL.
+      rv_message = |the customer { iv_customer_id } doest not exist|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -77,13 +87,23 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if technician exists
     DATA(lv_technician_exists) = check_technician_exists( iv_technician_id ).
     IF lv_technician_exists IS INITIAL.
+      rv_message = |the technician { iv_technician_id } doest not exist|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
 
-*    " Check if priority is valid
+    " Check if priority is valid
     DATA(lv_priority_valid) = check_priority_valid( iv_priority ).
     IF lv_priority_valid IS INITIAL.
+      rv_message = |the priority { iv_priority } doest not valid|.
+      rv_valid = abap_false.
+      RETURN.
+    ENDIF.
+
+    " Check if priority is valid
+    DATA(lv_status_valid) = check_status_valid( iv_status ).
+    IF lv_status_valid IS INITIAL.
+      rv_message = |the status { iv_status } doest not valid|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -97,6 +117,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if the work order exists
     DATA(lv_order_exists) = check_order_exists( iv_work_order_id ).
     IF lv_order_exists IS INITIAL.
+      rv_message = |the work order { iv_work_order_id } doest not exist|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -104,6 +125,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if the order status is editable (e.g., Pending)
     IF iv_status NE 'PE'.
       rv_valid = abap_false.
+      rv_message = |the status { iv_status } doest not editable|.
       RETURN.
     ENDIF.
 
@@ -116,12 +138,14 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if the order exists
     DATA(lv_order_exists) = check_order_exists( iv_work_order_id ).
     IF lv_order_exists IS INITIAL.
+      rv_message = |the work order { iv_work_order_id } doest not exist|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
 
     " Check if the order status is "PE" (Pending)
     IF iv_status NE 'PE'.
+      rv_message = |the status { iv_status } cannot deleted|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -129,6 +153,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Check if the order has a history (i.e., if it has been modified before)
     DATA(lv_has_history) = check_order_history( iv_work_order_id ).
     IF lv_has_history IS NOT INITIAL.
+      rv_message = |the work order { iv_work_order_id } has records in history, cannot be deleted|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -144,6 +169,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Validate the status value
     DATA(lv_status_valid) = check_status_valid( iv_status ).
     IF lv_status_valid IS INITIAL.
+      rv_message = |the status { iv_status } doest not valid|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -151,6 +177,7 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
     " Validate the priority value
     DATA(lv_priority_valid) = check_priority_valid( iv_priority ).
     IF lv_priority_valid IS INITIAL.
+      rv_message = |the priority { iv_priority } doest not valid|.
       rv_valid = abap_false.
       RETURN.
     ENDIF.
@@ -159,7 +186,19 @@ CLASS zcl_work_order_validator_0217 IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD autority_check.
 
+    AUTHORITY-CHECK OBJECT 'ZAOORD0217'
+    ID 'ACTVT' FIELD iv_activity.
+
+    IF sy-subrc = 12.
+      rv_result = abap_true.
+    ELSE.
+      rv_result = abap_false.
+      rv_message = |The user is not authorized to execute this action|.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD check_customer_exists.
